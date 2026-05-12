@@ -1,0 +1,187 @@
+package com.example.unit6navigation
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.pager.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
+
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            NavigationDemoApp()
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun NavigationDemoApp() {
+
+    val drawerState = rememberDrawerState(DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+
+    var selectedScreen by remember { mutableStateOf("Home") }
+
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            ModalDrawerSheet {
+
+                Text("Menu", modifier = Modifier.padding(16.dp))
+
+                DrawerItem("Home") { selectedScreen = "Home" }
+                DrawerItem("Courses") { selectedScreen = "Courses" }
+                DrawerItem("Profile") { selectedScreen = "Profile" }
+            }
+        }
+    ) {
+
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text(selectedScreen) },
+                    navigationIcon = {
+                        IconButton(onClick = {
+                            scope.launch { drawerState.open() }
+                        }) {
+                            Text("☰")
+                        }
+                    }
+                )
+            }
+        ) { padding ->
+
+            Box(modifier = Modifier.padding(padding)) {
+                when (selectedScreen) {
+                    "Home" -> HomeScreen()
+                    "Courses" -> CoursePager()
+                    "Profile" -> ProfileScreen()
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun DrawerItem(title: String, onClick: () -> Unit) {
+    Text(
+        text = title,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+            .clickable { onClick() }
+    )
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun HomeScreen() {
+
+    val tabs = listOf("Overview", "Updates", "Tasks")
+    val pagerState = rememberPagerState(pageCount = { tabs.size })
+    val scope = rememberCoroutineScope()
+
+    Column {
+
+        TabRow(selectedTabIndex = pagerState.currentPage) {
+
+            tabs.forEachIndexed { index, title ->
+
+                Tab(
+                    selected = pagerState.currentPage == index,
+                    onClick = {
+                        scope.launch {
+                            pagerState.animateScrollToPage(index)
+                        }
+                    },
+                    text = { Text(title) }
+                )
+            }
+        }
+
+        HorizontalPager(state = pagerState) { page ->
+
+            when (page) {
+                0 -> OverviewScreen()
+                1 -> UpdatesScreen()
+                2 -> TaskVerticalPager()
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun CoursePager() {
+
+    val courses = listOf("Android", "Web", "AI")
+    val pagerState = rememberPagerState(pageCount = { courses.size })
+
+    HorizontalPager(state = pagerState) { page ->
+
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("Course: ${courses[page]}")
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun TaskVerticalPager() {
+
+    val tasks = listOf("Task 1", "Task 2", "Task 3")
+    val pagerState = rememberPagerState(pageCount = { tasks.size })
+
+    VerticalPager(state = pagerState) { page ->
+
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("Task: ${tasks[page]}")
+        }
+    }
+}
+
+@Composable
+fun OverviewScreen() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text("Overview Content")
+    }
+}
+
+@Composable
+fun UpdatesScreen() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text("Updates Content")
+    }
+}
+
+@Composable
+fun ProfileScreen() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text("Profile Screen")
+    }
+}
